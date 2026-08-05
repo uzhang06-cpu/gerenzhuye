@@ -1,0 +1,7 @@
+# dev-only artifacts, not part of the published site
+*.log
+*.py
+bg-variant-*.html
+fonts/_charset.txt
+portrait-flip.png
+.DS_Store
