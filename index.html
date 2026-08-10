@@ -326,31 +326,44 @@
   .sw-item.on{ color:var(--klein); font-weight:700; letter-spacing:0.12em; }
 
   /* upper stage = fanned polaroid cards; front = photo + company/role/keywords, click flips to details */
-  .exp-stage{ position:absolute; left:0; right:0; top:clamp(86px,11.5vh,126px); height:clamp(340px,46vh,452px); z-index:1; pointer-events:none; }
-  .xcard{ position:absolute; left:50%; top:0; width:clamp(210px,16.5vw,242px); aspect-ratio:0.72; perspective:1200px;
+  .exp-stage{ position:absolute; left:0; right:0; top:clamp(116px,14.5vh,156px); height:clamp(390px,51vh,500px); z-index:1; pointer-events:none;
+    --card-shift-x:0px; --card-shift-y:0px; }
+  .xcard{ position:absolute; left:50%; top:0; width:clamp(250px,20vw,296px); aspect-ratio:0.72; perspective:1200px;
     transform-origin:50% 50%; pointer-events:auto; cursor:pointer;
-    transition:transform .62s cubic-bezier(.34,.72,.16,1), opacity .5s ease; }
+    transition:transform .68s cubic-bezier(.32,.72,0,1), opacity .52s cubic-bezier(.32,.72,0,1), filter .52s cubic-bezier(.32,.72,0,1); }
+  .xcard:not(.front){ filter:saturate(.72) brightness(1.06); }
+  .xcard:not(.front):hover, .xcard.peek{ filter:saturate(.98) brightness(1); opacity:.94 !important; z-index:99 !important; }
+  .xcard:not(.front):hover .xc-inner, .xcard.peek .xc-inner{
+    transform:translateY(-14px) rotateZ(calc(-1 * var(--card-tilt,0deg))) scale(1.015); }
+  .xcard.front{ filter:none; }
   .xc-inner{ position:absolute; inset:0; transform-style:preserve-3d; transition:transform .72s cubic-bezier(.4,.72,.18,1); }
   .xc-inner.flipped{ transform:rotateY(180deg); }
+  .exp-stage.has-flip .xcard:not(.front){ opacity:.2 !important; filter:saturate(.35) brightness(1.1); pointer-events:none !important; }
   .xc-front, .xc-back{ position:absolute; inset:0; border-radius:16px; overflow:hidden; background:#fff;
     backface-visibility:hidden; -webkit-backface-visibility:hidden;
     box-shadow:0 20px 52px -14px rgba(36,35,31,0.30), 0 2px 9px rgba(36,35,31,0.06); }
   .xcard.front .xc-front, .xcard.front .xc-back{ box-shadow:0 30px 70px -16px rgba(0,47,167,0.26), 0 3px 12px rgba(36,35,31,0.10); }
   /* front */
-  .xc-photo{ position:relative; height:70%; background-color:var(--c,#8a94b3); background-size:cover; background-position:center;
+  .xc-photo{ position:relative; height:75%; background-color:var(--c,#8a94b3); background-size:cover; background-position:center;
     background-image:linear-gradient(158deg, rgba(255,255,255,0.14), rgba(0,0,0,0.34)); display:flex; align-items:center; justify-content:center; }
   .xc-photo.has-img .xc-ph{ opacity:0; }
   .xc-ph{ font-family:var(--serif); font-size:clamp(20px,1.9vw,26px); font-weight:600; letter-spacing:0.08em; color:rgba(255,255,255,0.95);
     text-shadow:0 1px 8px rgba(0,0,0,0.25); }
-  .xc-cap{ height:30%; padding:9px 14px 11px; display:flex; flex-direction:column; justify-content:center; gap:5px; }
-  .xc-row1{ display:flex; align-items:baseline; justify-content:space-between; gap:8px; }
-  .xc-co{ font-family:var(--serif); font-size:clamp(16px,1.35vw,19px); font-weight:600; color:var(--ink); letter-spacing:0.02em; }
-  .xc-role{ font-family:var(--serif); font-size:12.5px; font-weight:600; color:var(--klein); white-space:nowrap; }
-  .xc-dept{ font-family:var(--sans); font-size:10px; letter-spacing:0.04em; color:var(--gray-soft); margin-top:-1px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-  .xc-kw{ display:flex; align-items:center; gap:5px; flex-wrap:wrap; margin-top:3px; }
-  .xc-kw span{ font-family:var(--sans); font-size:9.5px; letter-spacing:0.02em; color:var(--gray-hover); line-height:1;
-    background:rgba(36,35,31,0.045); border:1px solid rgba(36,35,31,0.08); border-radius:20px; padding:3.5px 8px; white-space:nowrap; }
-  .xcard.front .xc-kw span{ color:var(--klein); background:rgba(0,47,167,0.06); border-color:rgba(0,47,167,0.16); }
+  .xc-cap{ position:relative; height:25%; padding:10px 15px 11px; display:flex; flex-direction:column; justify-content:center; gap:4px; }
+  .xc-cap::before{ content:""; position:absolute; left:15px; top:0; width:30px; height:2px; border-radius:2px; background:var(--klein); opacity:.78; }
+  .xc-row1{ display:flex; align-items:baseline; justify-content:space-between; gap:12px; }
+  .xc-co{ min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-family:var(--serif); font-size:clamp(16px,1.35vw,19px); font-weight:600; color:var(--ink); letter-spacing:0.02em; }
+  .xc-role{ flex:none; font-family:var(--sans); font-size:10px; line-height:1; font-weight:600; letter-spacing:.06em; color:var(--klein); white-space:nowrap;
+    background:rgba(0,47,167,.06); border-radius:999px; padding:4px 8px; }
+  .xc-dept{ font-family:var(--sans); font-size:9.5px; letter-spacing:0.045em; color:var(--gray-soft); margin-top:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+    max-height:18px; opacity:1; transition:opacity .38s cubic-bezier(.32,.72,0,1), max-height .38s cubic-bezier(.32,.72,0,1), margin .38s cubic-bezier(.32,.72,0,1); }
+  .xc-kw{ display:flex; align-items:center; gap:7px; flex-wrap:nowrap; margin-top:2px; overflow:hidden;
+    max-height:22px; opacity:1; transition:opacity .38s cubic-bezier(.32,.72,0,1), max-height .38s cubic-bezier(.32,.72,0,1), margin .38s cubic-bezier(.32,.72,0,1); }
+  .xc-kw span{ position:relative; font-family:var(--sans); font-size:9.5px; letter-spacing:0.035em; color:var(--klein); line-height:1; white-space:nowrap; padding-left:8px; }
+  .xc-kw span::before{ content:""; position:absolute; left:0; top:50%; width:3px; height:3px; margin-top:-1.5px; border-radius:50%; background:currentColor; opacity:.45; }
+  .xcard:not(.front) .xc-dept, .xcard:not(.front) .xc-kw{ opacity:0; max-height:0; margin-top:0; }
+  .xcard:not(.front) .xc-cap{ justify-content:flex-end; padding-bottom:12px; }
+  .xcard:not(.front) .xc-row1{ align-items:flex-end; }
   /* back */
   .xc-back{ transform:rotateY(180deg); padding:18px 17px 16px; display:flex; flex-direction:column; text-align:left; }
   .xc-bhead{ display:flex; align-items:baseline; justify-content:space-between; gap:8px; }
@@ -365,12 +378,12 @@
   .xc-tags{ margin-top:auto; padding-top:13px; display:flex; flex-wrap:wrap; gap:6px; }
   .xc-tags span{ font-family:var(--sans); font-size:9.5px; letter-spacing:0.03em; color:var(--klein);
     background:rgba(0,47,167,0.055); border:1px solid rgba(0,47,167,0.14); border-radius:20px; padding:3px 9px; }
-  @media (max-height:800px){                                        /* short screens: shrink cards so they clear the arc */
-    .exp-stage{ top:clamp(70px,9vh,92px); }
-    .xcard{ width:clamp(148px,22vh,198px); }
+  @media (max-height:800px){                                        /* short screens: large cards lift upward rather than shrinking into thumbnails */
+    .exp-stage{ top:clamp(76px,11.5vh,96px); }
+    .xcard{ width:clamp(218px,34vh,268px); }
   }
 
-  .exp-arc{ position:absolute; left:0; right:0; bottom:0; height:clamp(340px,48vh,470px); overflow:hidden; --R:640px; --gap:140px;
+  .exp-arc{ position:absolute; left:0; right:0; bottom:0; height:clamp(330px,50vh,470px); overflow:hidden; --R:640px; --gap:140px;
     cursor:grab; touch-action:none; }
   .exp-arc.dragging{ cursor:grabbing; }
   /* rotating gauge: circular rail + ruler ticks + tangential labels — pushed lower, flatter reveal */
@@ -392,6 +405,8 @@
   .gl-range{ display:block; font-family:var(--sans); font-size:10px; letter-spacing:0.04em; color:var(--gray-soft); opacity:.65; margin-top:2px; }
   .glabel.act .gl-abbr{ color:var(--klein); font-weight:700; font-size:16px; letter-spacing:0.02em; }
   .glabel.act .gl-range{ color:var(--klein); opacity:1; }
+  .glabel.near .gl-abbr{ font-size:12px; color:var(--gray-soft); }
+  .glabel.far{ pointer-events:none; }
   /* big section node sitting in the gap between two modules — klein diamond on the rail + section name above */
   .gnode-mark{ position:absolute; left:50%; top:50%; width:0; height:0; transform-origin:0 0; z-index:1;
     transform:rotate(var(--a)) translateY(calc(-1*var(--R))); transition:opacity .45s ease; }
@@ -432,6 +447,14 @@
     .nav-right{ gap:18px; }
     .tabs{ gap:15px; }
     .edu{ gap:20px; }
+    .exp-stage{ top:132px; }
+    .xcard{ width:min(230px,61vw); }
+    .xcard:not(.front){ pointer-events:none !important; }
+  }
+  @media (max-width:520px){
+    .exp-switch{ transform:scale(.82); transform-origin:left top; }
+    .exp-stage{ top:132px; --card-shift-x:0px; }
+    .xcard{ left:50%; width:min(214px,57vw); }
   }
   @media (prefers-reduced-motion: reduce){
     .pl-name.animate{ animation:none; }
@@ -1013,7 +1036,7 @@
         {t:"，比起一个个标签，当下的丰盈和成长让我走得更远。"} ],
       [ {t:"极度高精力心力旺盛（Keep 运动 "}, {t:"47622", hl:true}, {t:" 分钟，2025 年总步数 "},
         {t:"480+ 万", hl:true}, {t:" 步，潮汐冥想 "}, {t:"240.6", hl:true},
-        {t:" 小时），情绪稳定柔和，责任心强，有较强的领导意愿和能力，期望做 "},
+        {t:" 小时），情绪稳定柔和，责任心强，有较强的事业心，期望做 "},
         {t:"AI 时代的引路者", hl:true}, {t:"。"} ]
     ],
     en: [
@@ -1216,11 +1239,13 @@
     gauge.style.setProperty("--rot", (-ang(active))+"deg");        // rotate active experience to top-centre
     var majors=ruler.querySelectorAll(".rtick.major"), labs=glabels.querySelectorAll(".glabel");
     for(var i=0;i<labs.length;i++){
-      var on=(i===active);
-      labs[i].classList.toggle("act", on);
-      labs[i].style.opacity = on ? "1" : String(Math.max(0.12, 1 - Math.abs(i-active)*0.19));   // fade distant labels
-      labs[i].querySelector(".gl-abbr").textContent=tx(items[i].abbr);
-      labs[i].querySelector(".gl-range").textContent=tx(items[i].range);
+      var on=(i===active), dist=Math.abs(i-active), ab=labs[i].querySelector(".gl-abbr"), rg=labs[i].querySelector(".gl-range");
+      labs[i].classList.toggle("act",on);
+      labs[i].classList.toggle("near",!on && dist===1);
+      labs[i].classList.toggle("far",dist>1);
+      labs[i].style.opacity = on ? "1" : (dist===1 ? ".5" : ".12");
+      ab.textContent = dist<=1 ? tx(items[i].abbr) : "";
+      rg.textContent = on ? tx(items[i].range) : "";
     }
     for(var k=0;k<majors.length;k++) majors[k].classList.toggle("act", k===active);
     var di=dots.querySelectorAll("i");
@@ -1257,9 +1282,14 @@
         +   '<div class="xc-back"><div class="xc-bhead"><span class="xc-bco"></span><span class="xc-brange"></span></div>'
         +     '<div class="xc-brole"></div><p class="xc-desc"></p><ul class="xc-hi"></ul><div class="xc-tags"></div></div>'
         + '</div>';
-      (function(ph,key){ var im=new Image(); im.onload=function(){ ph.style.backgroundImage="url('cards/"+key+".jpg')"; ph.classList.add("has-img"); }; im.src="cards/"+key+".jpg"; })(c.querySelector(".xc-photo"), it.img);
+      /* Photo slots intentionally stay on their brand-color placeholder until a card image is registered.
+         This avoids failed image requests while the user is still collecting the ten photos. */
       c.addEventListener("click", function(){ var idx=+c.getAttribute("data-i");
-        if(idx===active){ c.querySelector(".xc-inner").classList.toggle("flipped"); } else { setActive(idx); } });
+        if(idx===active){ var inn=c.querySelector(".xc-inner"), on=!inn.classList.contains("flipped");
+          inn.classList.toggle("flipped",on); stage.classList.toggle("has-flip",on);
+        } else { stage.classList.remove("has-flip"); setActive(idx); } });
+      c.addEventListener("pointerenter",function(){ if(+c.getAttribute("data-i")!==active) c.classList.add("peek"); });
+      c.addEventListener("pointerleave",function(){ c.classList.remove("peek"); });
       stage.appendChild(c);
     });
     paintCards();
@@ -1280,30 +1310,45 @@
       c.querySelector(".xc-tags").innerHTML=tagHtml(it.tags);
     }
   }
-  var FANY=13, FANR=3.4;                                            // fan step down / rotate; FANX derived from width below
-  function jit(i,seed){ var x=Math.sin((i+1)*seed)*9973; return (x-Math.floor(x))*2-1; }   // deterministic -1..1 per card
-  function layoutCards(){                                            // same-section cards fan out (loose/scattered) and the group is centred; others hidden
+  /* Fixed visual anchor: the active card never drifts. Other cards follow the same circular geometry as the wheel. */
+  function layoutCards(){
     var cs=stage.querySelectorAll(".xcard"); if(!cs.length) return;
-    var actSec=SEC_OF[active], FANX=Math.max(56, Math.min(96, window.innerWidth*0.05));   // spread, echoes the timeline below
-    var minO=999, maxO=-999;                                         // centre the visible fan horizontally
-    for(var m=0;m<cs.length;m++){ if(!awardMode && SEC_OF[m]===actSec){ var om=m-active; if(om<minO)minO=om; if(om>maxO)maxO=om; } }
-    var mid=(minO+maxO)/2;
-    for(var i=0;i<cs.length;i++){ var c=cs[i], o=i-active, ao=Math.abs(o), lead=(o===0);
+    var actSec=SEC_OF[active], R=parseFloat(getComputedStyle(expArc).getPropertyValue("--R"))||720;
+    var sw=document.querySelector(".exp-switch"), navRight=document.querySelector(".nav-right"), cardW=cs[0].getBoundingClientRect().width||260;
+    var safeL=sw ? sw.getBoundingClientRect().right+54 : 220, safeR=navRight ? navRight.getBoundingClientRect().left-34 : window.innerWidth-40;
+    var desired=window.innerWidth*.43;                              // stable editorial anchor; never changes with the active experience
+    var anchor = window.innerWidth<=520 ? window.innerWidth/2 : Math.max(safeL+cardW/2,Math.min(desired,safeR-cardW/2));
+    stage.style.setProperty("--card-shift-x",(anchor-window.innerWidth/2).toFixed(1)+"px");
+    var secIdx=[]; for(var si=0;si<cs.length;si++) if(SEC_OF[si]===actSec) secIdx.push(si);
+    var activePos=secIdx.indexOf(active);
+    for(var i=0;i<cs.length;i++){ var c=cs[i], lead=(i===active), inner=c.querySelector(".xc-inner");
       if(awardMode || SEC_OF[i]!==actSec){ c.style.opacity="0"; c.style.pointerEvents="none"; c.style.zIndex="0";
-        c.style.transform="translate(-50%, 30px) scale(.62)"; c.classList.remove("front"); c.querySelector(".xc-inner").classList.remove("flipped"); continue; }
-      var jx=lead?0:jit(i,3.1)*7, jy=lead?0:jit(i,7.7)*6, jr=lead?0:jit(i,12.9)*1.8;   // gentle scatter for non-active cards
-      c.style.transform="translate(calc(-50% + "+((o-mid)*FANX+jx).toFixed(1)+"px), "+(ao*FANY+jy).toFixed(1)+"px) rotate("+(o*FANR+jr).toFixed(2)+"deg) scale("+(1-ao*0.04).toFixed(3)+")";
-      c.style.opacity=String(Math.max(0.4, 1-ao*0.12));
-      c.style.zIndex=String(100-ao);
+        c.style.transform="translate(-50%, 30px) scale(.62)"; c.classList.remove("front","peek"); inner.classList.remove("flipped"); continue; }
+      var pos=secIdx.indexOf(i), rel=(pos-activePos+secIdx.length)%secIdx.length;
+      /* Reference-style open fan: the selected card is fully readable; following cards travel on a broad right-down arc. */
+      var stepX=Math.max(122,Math.min(164,window.innerWidth*.125));
+      var x=rel*stepX - Math.max(0,rel-1)*rel*5;                     // wide at the front, gently compresses near the edge
+      var y=rel*8 + rel*rel*2.2;                                    // broad but shallow arc, separated from the wheel labels
+      var tilt=rel*6.2;                                             // tangent rhythm: 0 / 6.2 / 12.4 / 18.6 / 24.8°
+      var scale=Math.max(.88,1-rel*.025);
+      c.style.setProperty("--card-tilt",tilt.toFixed(2)+"deg");
+      c.style.transform="translate(calc(-50% + var(--card-shift-x) + "+x.toFixed(1)+"px), calc(var(--card-shift-y) + "+y.toFixed(1)+"px)) rotate("+tilt.toFixed(2)+"deg) scale("+scale.toFixed(3)+")";
+      c.style.opacity=String(Math.max(0.42,1-rel*0.12));
+      c.style.zIndex=String(100-rel);
       c.style.pointerEvents="auto";
-      c.classList.toggle("front", lead);
-      if(!lead) c.querySelector(".xc-inner").classList.remove("flipped");
+      c.classList.toggle("front",lead);
+      c.querySelector(".xc-dept").style.opacity = lead ? "1" : "0";
+      c.querySelector(".xc-dept").style.maxHeight = lead ? "18px" : "0";
+      c.querySelector(".xc-kw").style.opacity = lead ? "1" : "0";
+      c.querySelector(".xc-kw").style.maxHeight = lead ? "22px" : "0";
+      if(!lead) inner.classList.remove("flipped");
     }
   }
   function updateStage(){ layoutCards(); }
   function setActive(i){
     i=Math.max(0, Math.min(items.length-1, i));
     if(awardMode) showAward(false);
+    stage.classList.remove("has-flip");
     active=i; layout(); updateStage();
   }
   function setPtr(s){                                                // rotate the dial pointer to a section
@@ -1323,7 +1368,7 @@
   // ---- drag the arc left↔right (fixed sensitivity, screen-independent) ----
   var dragging=false, sx=0, moved=false, STEP_PX=88;               // ~88px of horizontal drag = one experience
   expArc.addEventListener("pointerdown", function(e){
-    if(awardMode || (e.target.closest && e.target.closest(".arc-nav"))) return;
+    if(awardMode || stage.classList.contains("has-flip") || (e.target.closest && e.target.closest(".arc-nav"))) return;
     dragging=true; moved=false; sx=e.clientX; gauge.style.transition="none"; expArc.classList.add("dragging");
   });
   window.addEventListener("pointermove", function(e){
@@ -1345,7 +1390,7 @@
   // ---- trackpad two-finger horizontal swipe → move through the timeline ----
   var accX=0, accT;
   expArc.addEventListener("wheel", function(e){
-    if(awardMode) return;
+    if(awardMode || stage.classList.contains("has-flip")) return;
     if(Math.abs(e.deltaX) <= Math.abs(e.deltaY)) return;           // vertical → leave it for page navigation
     e.preventDefault();
     accX += e.deltaX; clearTimeout(accT); accT=setTimeout(function(){ accX=0; }, 220);
