@@ -1,0 +1,10 @@
+.git
+.github
+.gitignore
+Dockerfile
+README*
+*.log
+*.py
+bg-variant-*.html
+portrait-flip.png
+.DS_Store
