@@ -1,5 +1,4 @@
 import {
-  SIGNUP_BONUS_COINS,
   type Bounty,
   type CoinTx,
   type Course,
@@ -11,7 +10,7 @@ import {
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import type { CourseDraft } from '../components/publish/PublishModal'
-import { DEFAULT_PROFILE } from '../data/seed'
+import { DEFAULT_PROFILE, SEED_BALANCE } from '../data/seed'
 
 /**
  * 全局状态。
@@ -71,7 +70,8 @@ const initial = {
   onboardingDone: false,
   tourDone: false,
   profile: DEFAULT_PROFILE,
-  coins: SIGNUP_BONUS_COINS,
+  coins: SEED_BALANCE,
+  /** 只存用户自己产生的流水，展示时与种子流水合并 */
   txs: [] as CoinTx[],
   myCourses: [] as Course[],
   invitedSessions: [] as Session[],

@@ -115,9 +115,20 @@ PDF / Word 简历的文字提取**不需要 key**，它是本地解析，不调�
 
 **线上没变化** → 99% 是忘了在 Sealos 点重新部署。先用 `/api/health` 的 `version` 判断。
 
-**Actions 里 ImagePullBackOff / 拉不到镜像** → GHCR 上的包默认是私有的。去 GitHub 的
-`Packages` 页面把 `gerenzhuye` 这个包的可见性改成 Public（镜像里没有任何密钥，
-密钥都是运行时的环境变量），或者改用 PAT 建 imagePullSecret。
+**Actions 里 ImagePullBackOff / 拉不到镜像** → GHCR 上的包默认是私有的。去
+`https://github.com/users/uzhang06-cpu/packages/container/gerenzhuye/settings` 的
+**Danger Zone → Change visibility → Public**（镜像里没有任何密钥，密钥都是运行时的环境变量），
+或者改用 PAT 建 imagePullSecret。
+
+> **验证包是否可匿名拉取，别直接打 `tags/list`。**
+> `curl https://ghcr.io/v2/<owner>/<repo>/tags/list` 无论包公开还是私有**都会返回 401** ——
+> 那是 Docker Registry 的标准行为，要求客户端先做一次 token 交换（Docker 和 Sealos 会自动做）。
+> 直接拿这个 401 当「包是私有的」证据会误判。正确的测法：
+> ```bash
+> TOK=$(curl -s "https://ghcr.io/token?scope=repository:uzhang06-cpu/gerenzhuye:pull&service=ghcr.io" | grep -o '"token":"[^"]*"' | cut -d'"' -f4)
+> curl -s -H "Authorization: Bearer $TOK" https://ghcr.io/v2/uzhang06-cpu/gerenzhuye/tags/list
+> ```
+> 返回 tags 列表才是真的可拉。
 
 **接口 404 / 页面白屏** → 先看 `/api/health` 通不通。通了但页面白屏，多半是 `index.html`
 被缓存了，强刷一次。

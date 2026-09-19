@@ -7,7 +7,7 @@ export type TeachingMode = 'online' | 'offline'
 export type SessionStatus = 'pending' | 'active' | 'reviewing' | 'done'
 
 /** 技能币流水类型。 */
-export type CoinTxKind = 'earn' | 'spend' | 'recharge' | 'freeze' | 'unfreeze'
+export type CoinTxKind = 'earn' | 'spend' | 'recharge' | 'bonus' | 'freeze' | 'unfreeze'
 
 export interface UserProfile {
   nickname: string

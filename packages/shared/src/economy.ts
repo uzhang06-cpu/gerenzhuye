@@ -102,5 +102,9 @@ export const VIP_PRICE_COINS = 88
 /** 充值档位，供充值面板使用。 */
 export const RECHARGE_PRESETS: readonly number[] = [50, 100, 300, 500]
 
-/** 注册初始赠送，破冰用 —— 新用户没有币就问不到任何人。 */
-export const SIGNUP_BONUS_COINS = 30
+/**
+ * 注册初始赠送，破冰用 —— 新用户没有币就问不到任何人。
+ * 定在 300 是因为集市里最贵的课到 120 币，30 币会让大部分课都显示「技能币不足」，
+ * 演示时满屏灰按钮很打击观感。
+ */
+export const SIGNUP_BONUS_COINS = 300

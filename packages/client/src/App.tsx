@@ -1,10 +1,11 @@
+import { computeMatchScore } from '@skillswap/shared'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { BottomNav, type TabId } from './components/layout/BottomNav'
 import { OnboardingModal } from './components/onboarding/OnboardingModal'
 import { PublishModal } from './components/publish/PublishModal'
 import { RechargeSheet } from './components/profile/RechargeSheet'
 import { TourPopover, type TourStep } from './components/tour/TourPopover'
-import { SEED_BOUNTIES, SEED_COURSES, SEED_MATCHES, SEED_SESSIONS } from './data/seed'
+import { SEED_BOUNTIES, SEED_COURSES, SEED_MATCHES, SEED_SESSIONS, SEED_TX } from './data/seed'
 import { MarketPage, type MarketSegment } from './pages/MarketPage'
 import { ProfilePage } from './pages/ProfilePage'
 import { SessionsPage } from './pages/SessionsPage'
@@ -48,12 +49,28 @@ export function App() {
   }, [tab])
 
   // 种子内容与用户内容在这里合并，store 里只存用户产生的那部分
+  /**
+   * 契合度必须按用户**当前**登记的能教/想学当场算，不能预先写死在种子数据里 ——
+   * 否则引导里选完技能后，卡片上的百分比还是拿默认身份算的，而这个产品的核心承诺就是匹配准。
+   * 算完按分数降序，保证推荐位永远是最契合的那几个人。
+   */
   const matches = useMemo(
     () =>
       SEED_MATCHES.filter(
         (m) => !skippedMatchIds.includes(m.id) && !invitedMatchIds.includes(m.id),
-      ),
-    [skippedMatchIds, invitedMatchIds],
+      )
+        .map((m) => ({
+          ...m,
+          score: computeMatchScore({
+            myTeachSkillIds: profile.teachSkillIds,
+            myWantSkillIds: profile.wantSkillIds,
+            theirTeachSkillId: m.teachSkillId,
+            theirWantSkillId: m.wantSkillId,
+            partnerId: m.partnerId,
+          }),
+        }))
+        .sort((a, b) => b.score - a.score),
+    [profile.teachSkillIds, profile.wantSkillIds, skippedMatchIds, invitedMatchIds],
   )
   const courses = useMemo(() => [...myCourses, ...SEED_COURSES], [myCourses])
   // 种子会话的状态变化存在覆盖层里，这里合并出最终视图
@@ -65,6 +82,8 @@ export function App() {
     [invitedSessions, sessionOverrides],
   )
   const completedSwaps = useMemo(() => sessions.filter((s) => s.status === 'done').length, [sessions])
+  // 用户自己产生的流水排在种子流水前面
+  const allTxs = useMemo(() => [...txs, ...SEED_TX], [txs])
 
   const handleRefresh = useCallback(() => {
     // 被划掉的卡先还回来，否则「换一批」在划完一轮后就什么都不会发生
@@ -145,7 +164,7 @@ export function App() {
               frozen={sessions
                 .filter((s) => s.status === 'active')
                 .reduce((sum, s) => sum + (s.coinsSpent ?? 0), 0)}
-              txs={txs}
+              txs={allTxs}
               sessions={sessions}
               completedSwaps={completedSwaps}
               onTimeRate={completedSwaps > 0 ? 1 : null}

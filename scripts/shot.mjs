@@ -92,60 +92,83 @@ for (const vp of VIEWPORTS) {
     }
   }
 
-  // ── P5：文件上传通道 ──
-  // 用不支持的格式走一遍完整的往返，验证上传接线与错误提示；
-  // 真实的 PDF / docx 提取由服务端单测覆盖（那份 771KB 简历不便进仓库）
-  await page.getByLabel('上传简历文件').setInputFiles({
-    name: 'resume.txt',
-    mimeType: 'text/plain',
-    buffer: Buffer.from('hello'),
-  })
-  check(tag('不支持的格式如实提示'), await waitFor(page.getByText(/暂不支持 \.txt/)))
-  check(tag('错误提示同时给出替代做法'), (await page.getByText(/直接粘贴文本|粘贴文本/).count()) > 0)
+  /*
+   * 先探测服务端的 LLM 状态，再决定验哪条路。
+   * 线上可能没配 DEEPSEEK_API_KEY，那时 AI 入口本来就该收起 ——
+   * 把这种情况当成失败会误报，正确的做法是分别断言两条路各自的表现。
+   */
+  const health = await page.evaluate(() =>
+    fetch('/api/health')
+      .then((r) => (r.ok ? r.json() : null))
+      .catch(() => null),
+  )
+  const llmReady = Boolean(health?.llm?.configured)
+  check(tag('拿到服务端健康状态'), health !== null, JSON.stringify(health?.llm))
 
-  // ── P4：粘贴自介 → AI 自动勾选 ──
-  await page.getByLabel('简历或自我介绍文本').fill('我做了三年 Python 爬虫，业余弹民谣吉他。')
-  await page.getByRole('button', { name: '解析并自动勾选技能' }).click()
+  if (!llmReady) {
+    // 降级路径：入口收起 + 明确告诉用户手动选就行
+    check(tag('未配 key 时 AI 入口收起'), await page.getByText(/AI 自动导入当前不可用/).isVisible())
+    for (const label of TEACH) {
+      await page.getByRole('button', { name: `选择技能：${label}` }).click()
+    }
+    await shot('02-onboarding-step2')
+  } else {
+    // ── P5：文件上传通道 ──
+    // 用不支持的格式走一遍完整往返，验证上传接线与错误提示；
+    // 真实的 PDF / docx 提取由服务端单测覆盖（那份 771KB 简历不便进仓库）
+    await page.getByLabel('上传简历文件').setInputFiles({
+      name: 'resume.txt',
+      mimeType: 'text/plain',
+      buffer: Buffer.from('hello'),
+    })
+    check(tag('不支持的格式如实提示'), await waitFor(page.getByText(/暂不支持 \.txt/)))
+    check(tag('错误提示同时给出替代做法'), (await page.getByText(/直接粘贴文本|粘贴文本/).count()) > 0)
 
-  for (const label of TEACH) {
+    // ── P4：粘贴自介 → AI 自动勾选 ──
+    await page.getByLabel('简历或自我介绍文本').fill('我做了三年 Python 爬虫，业余弹民谣吉他。')
+    await page.getByRole('button', { name: '解析并自动勾选技能' }).click()
+
+    for (const label of TEACH) {
+      check(
+        tag(`AI 自动勾选了「${label}」`),
+        await waitFor(page.getByRole('button', { name: `取消技能：${label}` })),
+      )
+    }
+    // 已选概况必须是纯文字：可点的芯片若同时出现在列表和概况里，用户会分不清该在哪取消
     check(
-      tag(`AI 自动勾选了「${label}」`),
-      await waitFor(page.getByRole('button', { name: `取消技能：${label}` })),
+      tag('已选概况不重复渲染可点芯片'),
+      (await page.getByRole('button', { name: /^取消技能：/ }).count()) === TEACH.length,
     )
-  }
-  // 已选概况必须是纯文字：可点的芯片若同时出现在列表和概况里，用户会分不清该在哪取消
-  check(
-    tag('已选概况不重复渲染可点芯片'),
-    (await page.getByRole('button', { name: /^取消技能：/ }).count()) === TEACH.length,
-  )
 
-  // 纵深防御：服务端若返回库外的 id，前端也绝不能把它渲染出来
-  await page.route('**/api/llm/parse-skills', (route) =>
-    route.fulfill({
-      status: 200,
-      contentType: 'application/json',
-      body: JSON.stringify({
-        skills: [
-          { id: 'evil.hack', confidence: 0.99, evidence: 'x' },
-          { id: 'also.bad', confidence: 0.9, evidence: 'y' },
-        ],
-        unmatched: ['乐器维修'],
-        model: 'test',
-        ms: 1,
+    // 纵深防御：服务端若返回库外的 id，前端也绝不能把它渲染出来
+    await page.route('**/api/llm/parse-skills', (route) =>
+      route.fulfill({
+        status: 200,
+        contentType: 'application/json',
+        body: JSON.stringify({
+          skills: [
+            { id: 'evil.hack', confidence: 0.99, evidence: 'x' },
+            { id: 'also.bad', confidence: 0.9, evidence: 'y' },
+          ],
+          unmatched: ['乐器维修'],
+          model: 'test',
+          ms: 1,
+        }),
       }),
-    }),
-  )
-  await page.getByRole('button', { name: '解析并自动勾选技能' }).click()
-  await waitFor(page.getByText(/没有能对应到技能库的内容/))
-  check(tag('库外技能 id 不会被渲染'), (await page.getByText('evil.hack').count()) === 0)
-  check(
-    tag('全为非法 id 时选择数不变'),
-    (await page.getByRole('button', { name: /^取消技能：/ }).count()) === TEACH.length,
-  )
-  check(tag('未匹配项如实回显'), (await page.getByText(/乐器维修/).count()) > 0)
-  await page.unroute('**/api/llm/parse-skills')
+    )
+    await page.getByRole('button', { name: '解析并自动勾选技能' }).click()
+    await waitFor(page.getByText(/没有能对应到技能库的内容/))
+    check(tag('库外技能 id 不会被渲染'), (await page.getByText('evil.hack').count()) === 0)
+    check(
+      tag('全为非法 id 时选择数不变'),
+      (await page.getByRole('button', { name: /^取消技能：/ }).count()) === TEACH.length,
+    )
+    check(tag('未匹配项如实回显'), (await page.getByText(/乐器维修/).count()) > 0)
+    await page.unroute('**/api/llm/parse-skills')
 
-  await shot('02-onboarding-step2')
+    await shot('02-onboarding-step2')
+  }
+
   await page.getByRole('button', { name: '下一步：挑选我的心愿' }).click()
   await page.waitForTimeout(350)
 
@@ -273,6 +296,19 @@ for (const vp of VIEWPORTS) {
   const beforeEnroll = Number(await balance())
   await page.locator('[data-tour="market"]').click()
   await page.waitForTimeout(250)
+
+  // 课程定价是生成出来的，不能写死 12 —— 从卡片上把实际价格读出来再核对
+  const enrollPrice = Number(
+    (await page
+      .locator('[data-course]')
+      .filter({ hasText: '爬虫陪练' })
+      .first()
+      .locator('.num')
+      .first()
+      .textContent())?.trim(),
+  )
+  check(tag('读到课程定价'), enrollPrice > 0, `${enrollPrice} 币`)
+
   await page.getByRole('button', { name: /^约课：爬虫陪练/ }).click()
   await page.waitForTimeout(450)
 
@@ -282,7 +318,11 @@ for (const vp of VIEWPORTS) {
   await page.locator('[data-tour="profile"]').click()
   await page.waitForTimeout(250)
   const afterEnroll = Number(await balance())
-  check(tag('约课扣掉了技能币'), afterEnroll === beforeEnroll - 12, `${beforeEnroll} → ${afterEnroll}`)
+  check(
+    tag('约课扣掉了技能币'),
+    afterEnroll === beforeEnroll - enrollPrice,
+    `${beforeEnroll} → ${afterEnroll}（应减 ${enrollPrice}）`,
+  )
 
   // ───────────── P3：会话状态流转 ─────────────
 
@@ -322,10 +362,24 @@ for (const vp of VIEWPORTS) {
   await page.getByLabel('课程标题').fill('爬虫陪跑：两周把你的脚本跑起来')
 
   // ── P4：AI 一键生成大纲 ──
-  await page.getByRole('button', { name: '用 AI 生成大纲' }).click()
-  await page.waitForTimeout(900)
-  const outlineText = await page.getByLabel('交付大纲').inputValue()
-  check(tag('AI 生成了大纲'), outlineText.includes('第 1 节'), outlineText.slice(0, 40))
+  if (llmReady) {
+    await page.getByRole('button', { name: '用 AI 生成大纲' }).click()
+    // 轮询等文本落地，而不是等固定时长
+    let outlineText = ''
+    for (let i = 0; i < 40; i++) {
+      outlineText = await page.getByLabel('交付大纲').inputValue()
+      if (outlineText.trim()) break
+      await page.waitForTimeout(250)
+    }
+    check(tag('AI 生成了大纲'), outlineText.includes('第 1 节'), outlineText.slice(0, 40))
+  } else {
+    check(
+      tag('未配 key 时大纲按钮禁用并说明原因'),
+      (await page.getByRole('button', { name: '用 AI 生成大纲' }).isDisabled()) &&
+        (await page.getByText(/AI 生成暂不可用/).count()) > 0,
+    )
+    await page.getByLabel('交付大纲').fill('第 1 节 摸底：先问清你现在会什么\n第 2 节 动手：跟着做一遍')
+  }
 
   await page.getByRole('button', { name: '认证等级：熟练' }).click()
   await page.waitForTimeout(300)
@@ -355,6 +409,18 @@ for (const vp of VIEWPORTS) {
   await page.locator('[data-tour="profile"]').click()
   await page.waitForTimeout(300)
   await shot('11-profile')
+
+  // 钱包只列最近几条，但必须如实告知总数；余额也要能由流水推导出来
+  const txSummary = await page.getByText(/共 \d+ 条流水/).textContent()
+  check(tag('钱包如实告知流水总数'), /共 \d+ 条流水/.test(txSummary ?? ''), txSummary?.trim())
+  const walletBalance = Number(await balance())
+  const shownTxs = await page
+    .locator('section')
+    .filter({ hasText: '可用技能币' })
+    .locator('li')
+    .count()
+  check(tag('钱包只展开最近几条'), shownTxs > 0 && shownTxs <= 6, `${shownTxs} 条`)
+  check(tag('余额是正数且可观'), walletBalance > 0, `${walletBalance} 币`)
 
   const beforeRecharge = await balance()
   await page.getByRole('button', { name: '充值', exact: true }).click()
