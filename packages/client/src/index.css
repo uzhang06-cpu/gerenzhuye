@@ -1,0 +1,249 @@
+@import 'tailwindcss';
+
+/*
+ * SkillSwap 视觉基调：暖色活力 · 糖果渐变
+ *
+ * 配色刻意收在一个暖色家族里（奶油底 → 珊瑚 → 蜜桃），只留琥珀色给技能币、
+ * 苔绿给履约率，让「钱」和「信誉」在满屏的暖色里有唯一的识别色。
+ * 主文字用暖黑而非纯黑/中性灰，否则整页会浮。
+ */
+@theme {
+  --font-sans:
+    'PingFang SC', 'HarmonyOS Sans SC', 'MiSans', 'Microsoft YaHei', 'Noto Sans SC',
+    'Noto Sans CJK SC', 'Source Han Sans SC', system-ui, -apple-system, sans-serif;
+  /* 只喂给拉丁字母与数字：契合度、技能币金额、字标。中文字不引 webfont。 */
+  --font-display: 'Bricolage Grotesque Variable', var(--font-sans);
+
+  --color-cream: #fff7f2;
+  --color-cream-deep: #ffe8e0;
+  --color-shell: #ffffff;
+  --color-coral: #ff6b4a;
+  --color-coral-deep: #e24e2e;
+  --color-peach: #ffb199;
+  --color-ink: #2e211c;
+  --color-ink-soft: #8a756c;
+  --color-ink-faint: #c4ada3;
+  --color-hairline: #f3ded4;
+  --color-coin: #f0a020;
+  --color-leaf: #2f9e76;
+
+  --radius-chip: 12px;
+  --radius-card: 22px;
+  --radius-sheet: 28px;
+
+  --shadow-card: 0 1px 2px rgba(226, 90, 58, 0.05), 0 12px 28px -14px rgba(226, 90, 58, 0.22);
+  --shadow-lift: 0 2px 6px rgba(226, 90, 58, 0.08), 0 22px 44px -18px rgba(226, 90, 58, 0.3);
+  --shadow-seal: 0 6px 16px -4px rgba(226, 78, 46, 0.45);
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-sans);
+  color: var(--color-ink);
+  background: #f6ece7;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* 数字统一用展示体 + 等宽数位，金额与百分比纵向能对齐 */
+.num {
+  font-family: var(--font-display);
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: 'tnum' 1;
+  letter-spacing: -0.01em;
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-coral);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+/* ---------- 手机外壳：窄屏全幅，桌面居中成一帧手机 ---------- */
+
+.app-viewport {
+  height: 100dvh;
+  display: flex;
+  justify-content: center;
+  overflow: hidden;
+  background: radial-gradient(120% 80% at 50% 0%, #fff4ee 0%, #f3e4dc 100%);
+}
+
+/*
+ * 必须用确定高度而不是 min-height。
+ * 只给 min-height 时壳体高度由内容撑开，内部的 main 永远不需要滚动，
+ * 于是整页跟着滚、底部导航被推到页面最底下不再钉住 —— 这就不像 App 了。
+ */
+.app-shell {
+  position: relative;
+  width: 100%;
+  max-width: 430px;
+  height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  background: linear-gradient(180deg, var(--color-cream) 0%, var(--color-cream-deep) 100%);
+  overflow: hidden;
+}
+
+@media (min-width: 520px) {
+  .app-viewport {
+    padding: 28px 0;
+    align-items: flex-start;
+  }
+  .app-shell {
+    height: min(880px, calc(100dvh - 56px));
+    border-radius: 42px;
+    box-shadow:
+      0 0 0 10px #1c1310,
+      0 0 0 12px #33231d,
+      0 40px 90px -30px rgba(60, 26, 14, 0.55);
+  }
+}
+
+/* ---------- 交换凭证：可撕卡片 ---------- */
+
+/*
+ * mask 会连同 box-shadow 一起裁掉，所以阴影必须留在外层壳体上，
+ * 凭证本体只负责底色与挖缺口。
+ */
+.voucher-cast {
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
+}
+
+/*
+ * 上下两半用 1fr auto 1fr 网格，中缝因此恒在 50% 高度，
+ * 左右两侧的缺口才能用固定位置的 mask 精确挖在第一半与第二半之间。
+ * 也正因为中缝必须在 50%，人物身份行不能放进卡片内部（否则两半不等高，缺口会错位）。
+ */
+.voucher {
+  --notch: 10px;
+  display: grid;
+  grid-template-rows: 1fr auto 1fr;
+  position: relative;
+  background: var(--color-shell);
+  border-radius: var(--radius-card);
+  -webkit-mask:
+    radial-gradient(circle var(--notch) at left 50%, transparent 97%, #000 100%),
+    radial-gradient(circle var(--notch) at right 50%, transparent 97%, #000 100%);
+  mask:
+    radial-gradient(circle var(--notch) at left 50%, transparent 97%, #000 100%),
+    radial-gradient(circle var(--notch) at right 50%, transparent 97%, #000 100%);
+  -webkit-mask-composite: source-in;
+  mask-composite: intersect;
+}
+
+/* 打孔虚线：骑在中缝上，被封印压住 */
+.voucher__perf {
+  position: absolute;
+  left: 22px;
+  right: 22px;
+  top: 50%;
+  height: 2px;
+  transform: translateY(-50%);
+  background-image: repeating-linear-gradient(
+    to right,
+    var(--color-hairline) 0 7px,
+    transparent 7px 15px
+  );
+}
+
+/*
+ * 封印不给整条底色，否则会把骑在中缝上的打孔虚线整条盖掉。
+ * 只让圆章的白圈和文字胶囊去「压断」虚线。
+ */
+.voucher__seal {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding-block: 12px;
+}
+
+.voucher__seal-disc {
+  display: grid;
+  place-items: center;
+  width: 58px;
+  height: 58px;
+  border-radius: 999px;
+  color: #fff;
+  background: linear-gradient(145deg, var(--color-coral) 0%, var(--color-coral-deep) 100%);
+  box-shadow:
+    0 0 0 4px var(--color-shell),
+    var(--shadow-seal);
+}
+
+/* ---------- 定价滑杆 ---------- */
+
+/* 浏览器默认轨道在当前暖色底上是一道突兀的深灰，直接用 --fill 自己画 */
+.range {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 22px;
+  background: transparent;
+}
+
+.range::-webkit-slider-runnable-track {
+  height: 6px;
+  border-radius: 999px;
+  background: linear-gradient(
+    to right,
+    var(--color-coral) 0 var(--fill, 0%),
+    var(--color-cream-deep) var(--fill, 0%) 100%
+  );
+}
+
+.range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 20px;
+  height: 20px;
+  margin-top: -7px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, #ff7a5c 0%, #e24e2e 100%);
+  box-shadow:
+    0 0 0 3px var(--color-shell),
+    0 3px 8px -2px rgba(226, 78, 46, 0.6);
+}
+
+/* ---------- 底部导航 ---------- */
+
+.nav-bar {
+  padding-bottom: max(env(safe-area-inset-bottom), 10px);
+  background: color-mix(in srgb, var(--color-shell) 82%, transparent);
+  backdrop-filter: blur(18px) saturate(140%);
+  border-top: 1px solid var(--color-hairline);
+}
+
+/* ---------- 动效克制 ---------- */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}
+
+/* 首次出现的呼吸灯，只给 Step 3 的热门推荐用一处 */
+@keyframes breathe {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(255, 107, 74, 0.28);
+  }
+  50% {
+    box-shadow: 0 0 0 7px rgba(255, 107, 74, 0);
+  }
+}
+
+.breathe {
+  animation: breathe 2.6s ease-out infinite;
+}

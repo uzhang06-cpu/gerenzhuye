@@ -1,0 +1,24 @@
+{
+  "name": "skillswap",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "npm run dev -w @skillswap/client",
+    "dev:server": "npm run dev -w @skillswap/server",
+    "build": "npm run build -w @skillswap/client && npm run build -w @skillswap/server",
+    "preview": "npm run preview -w @skillswap/client",
+    "lint": "oxlint packages scripts",
+    "typecheck": "npm run typecheck -w @skillswap/client && npm run typecheck -w @skillswap/server",
+    "test": "npm test -w @skillswap/server",
+    "test:llm": "node scripts/llm-contract.mjs",
+    "shot": "node scripts/shot.mjs"
+  },
+  "devDependencies": {
+    "oxlint": "^1.83.0",
+    "playwright-core": "^1.63.0"
+  }
+}

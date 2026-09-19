@@ -1,7 +1,8 @@
-# dev-only artifacts, not part of the published site
+node_modules/
+dist/
+.env
+.env.*
+!.env.example
 *.log
-*.py
-bg-variant-*.html
-fonts/_charset.txt
-portrait-flip.png
 .DS_Store
+shots/

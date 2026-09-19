@@ -39,5 +39,10 @@ jobs:
         with:
           context: .
           push: true
+          # Sealos 的节点是 amd64，显式指定，避免 runner 架构变化时推出 arm64 镜像导致拉不起来
+          platforms: linux/amd64
+          # 把 commit sha 烤进镜像，/api/health 会回显它
+          build-args: |
+            APP_VERSION=${{ github.sha }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
